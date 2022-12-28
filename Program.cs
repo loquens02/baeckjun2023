@@ -10,11 +10,17 @@
 
         private static void Silver1003()
         {
-            int numTests = int.Parse(Console.ReadLine());
+            using StreamReader reader = new StreamReader(Console.OpenStandardInput());
+            using StreamWriter writer = new StreamWriter(Console.OpenStandardOutput());
+            var output = new System.Text.StringBuilder();
+            int numTests = int.Parse(reader.ReadLine());
 
             // Create an array to store the results of the Fibonacci1003 function for each value of n.
             // The array is initialized with -1 for all elements, which indicates that the value
             // has not yet been calculated.
+            
+            // 피보나치 입력이 될 N은 최대 40. N= 0~40 일 때 {0횟수, 1횟수} 를 저장하는 그릇.
+            // 깨달음1: 2차 배열을 이렇게 쓸 수 있다고? 생긴건 3차 배열인데. [0~40][{-1,-1}]
             int[][] results = new int[41][];
             for (int i = 0; i < 41; i++)
             {
@@ -27,10 +33,11 @@
 
             for (int i = 0; i < numTests; i++)
             {
-                int n = int.Parse(Console.ReadLine());
-                int[] result = Fibonacci1003(n, results);
-                Console.WriteLine(result[0] + " " + result[1]);
+                int n = int.Parse(reader.ReadLine());
+                int[] result = Fibonacci1003(n, results); // 0,1횟수를 다음대에 넘기려면 인자가 하나 더 필요
+                output.AppendLine(result[0] + " " + result[1]);
             }
+            writer.Write(output);
         }
 
         private static int[] Fibonacci1003(int n, int[][] results)
