@@ -15,7 +15,7 @@
             //var output = new System.Text.StringBuilder();
             
             // Test the algorithm with a sample formula
-            string formula = reader.ReadLine(); // "5-8+7-4-8+9"
+            string formula = reader.ReadLine(); // "015-018+7-4-8+9"
             
             int result = MinimizeFormula(formula);
             writer.Write(result);
@@ -24,6 +24,8 @@
         private static int MinimizeFormula(string formula)
         {
             // Split the formula into an array of numbers and operators
+            // 자른 위치의 연산자로 계산할거면 '연산자만 있는 배열'도 따로 만들어서 반환해야지
+            //(string[] elements, string[] operations) = SplitFormula(formula);
             string[] elements = SplitFormula(formula);
             int n = elements.Length;
 
@@ -45,7 +47,10 @@
                     dp[i, j] = int.MaxValue;
                     for (int k = i; k < j; k++)
                     {
-                        int value = Evaluate(dp[i, k], dp[k + 1, j], elements[k + 1]);  // elements[k + 1] is the operator between the ith and jth elements
+                        // operations 연산자만 있는 배열이라 '숫자 배열'보다 요소가 하나 적다.
+                        // 연산자 따로 떼서 계산할거면 elements 에서 각 숫자에 연산자를 붙이지 말아야지
+                        int value = Evaluate(dp[i, k], dp[k + 1, j], operations[k]);  // i ~ k ~ j 토막
+                        //int value = Evaluate(dp[i, k], dp[k + 1, j], elements[k]);  // i ~ k ~ j 토막
                         dp[i, j] = Math.Min(dp[i, j], value);
                     }
                 }
@@ -58,30 +63,37 @@
 
         // Split the formula into an array of numbers and operators
         /**
-         * 이 함수는 숫자가 1자리수 라는 전제로 진행. 실제로는 숫자가 연속으로 나올 수 있다
-         * TODO 이대로면 숫자 뒤에 연산자가 붙는데, 앞에 붙어야 하지 않나?
+         * @return (연산자&숫자 배열, 연산자 배열)
+         * 
          */
-        private static string[] SplitFormula(string formula)
+        //private static string[] SplitFormula(string formula)
+        private static (string[], string[]) SplitFormula(string formula)
         {
-            string[] elements = new string[formula.Length / 2 + 1]; // 숫자 개수 만큼 반토막+1
+            List<string> tokens = ParseExpression(formula);
+            string[] elements = new string[tokens.Count / 2 + 1]; // 숫자 개수 만큼 반토막+1            
+            string[] operations = new string[tokens.Count / 2]; // 숫자 개수 만큼 반토막+1            
+
             int index = 0;
-            for (int i = 0; i < formula.Length; i++)
+            
+            for (int i = 0; i < tokens.Count; i++)
             {
-                if (i % 2 == 0)
+                if (i % 2 == 1)
                 {
-                    elements[index] = formula[i].ToString(); // 숫자 (0,2번째)
+                    operations[index] = tokens[i].ToString();
+                    elements[index] = tokens[i].ToString(); // 연산자 넣기
+
                 }
-                else
+                else 
                 {
-                    elements[index] += formula[i]; // 숫자 넣었던 위치에 연산자 더해주기
+                    elements[index] += tokens[i]; // 숫자 (0,2번째)
                     index++;
                 }
             }
-            return elements;
+            return (elements, operations);
+            //return elements;
         }
-        /*
-         * TODO SplitFormula 형태로 변형해야. 
-         */
+
+        // SplitFormula 말고 이것만 하는 게 더 의도에 맞는 듯?
         private static List<string> ParseExpression(string expression)
         {
             // Create a list to store the tokens
@@ -101,6 +113,9 @@
                 // If the character is an operator, add the current token to the list of tokens and reset the current token
                 else if (c == '+' || c == '-')
                 {
+                    //c# Remove trailing leading zeros. 
+                    currentToken= currentToken.TrimStart('0');
+
                     tokens.Add(currentToken);
                     currentToken = "";
                     tokens.Add(c.ToString());
@@ -131,7 +146,7 @@
 
         private static void Silver1003()
         {
-            // 더 빠른 코드? 재귀를 안 쓰더라. 단일 for문과 무언가의 덧셈으로 끝낸다
+            // 더 빠른 코드? 재귀를 안 쓰더라. 단일 for문과 무언가의 덧셈으로 끝낸다 > 아마도 상향식 DP?
             // 이해는 못 했는데 피보나치를 계산하는 대신 피보나치0,1count 만 하는 문제로 재해석해서 푼 듯.
             // 피보나치 수열은 0 1 1 2 3 5 8 13 이니
             // 피보나치 01count는 [1,0] [0,1] [1,1] [0,2] [1,3] 으로 여기 규칙을 따로 구한 듯?? (미검증)
