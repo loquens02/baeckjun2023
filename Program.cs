@@ -12,10 +12,8 @@
         {
             using StreamReader reader = new StreamReader(Console.OpenStandardInput());
             using StreamWriter writer = new StreamWriter(Console.OpenStandardOutput());
-            //var output = new System.Text.StringBuilder();
             
-            // Test the algorithm with a sample formula
-            string formula = reader.ReadLine(); // "015-018+7-4-8+9"
+            string formula = reader.ReadLine(); // "015-018+6+7-4-8+9"
             
             int result = MinimizeFormula(formula);
             writer.Write(result);
@@ -24,62 +22,42 @@
         private static int MinimizeFormula(string formula)
         {
             // Split the formula into an array of numbers and operators
-            // 자른 위치의 연산자로 계산할거면 '연산자만 있는 배열'도 따로 만들어서 반환해야지
-            //(string[] elements, string[] operations) = SplitFormula(formula);
-            string[] elements = SplitFormula(formula);
+            int[] elements = SplitFormula(formula);
             int n = elements.Length;
-
-            // Define a 2D table for dynamic programming
-            int[,] dp = new int[n, n];
-
-            // Initialize the table
-            for (int i = 0; i < n; i++)
+            int sum = 0;
+            bool toggleActivate = false;
+            
+            for(int i=0; i<n; i++)
             {
-                dp[i, i] = int.Parse(elements[i]);  // elements[i] is the ith element in the formula
-            }
-
-            // Use dynamic programming to fill out the rest of the table
-            for (int length = 2; length <= n; length++)
-            {
-                for (int i = 0; i <= n - length; i++)
+                int currentElem = elements[i];
+                if (toggleActivate && elements[i] > 0) 
                 {
-                    int j = i + length - 1;
-                    dp[i, j] = int.MaxValue;
-                    for (int k = i; k < j; k++)
-                    {
-                        // operations 연산자만 있는 배열이라 '숫자 배열'보다 요소가 하나 적다.
-                        // 연산자 따로 떼서 계산할거면 elements 에서 각 숫자에 연산자를 붙이지 말아야지
-                        int value = Evaluate(dp[i, k], dp[k + 1, j], operations[k]);  // i ~ k ~ j 토막
-                        //int value = Evaluate(dp[i, k], dp[k + 1, j], elements[k]);  // i ~ k ~ j 토막
-                        dp[i, j] = Math.Min(dp[i, j], value);
-                    }
+                   elements[i] *= -1; // 경우2
                 }
+
+                if (currentElem < 0)
+                {
+                    toggleActivate = true;
+                }
+                sum += elements[i];
             }
 
-            // The minimum value of the entire formula is dp[0][n-1]
-            return dp[0, n - 1];
+            return sum;
         }
 
 
         // Split the formula into an array of numbers and operators
-        /**
-         * @return (연산자&숫자 배열, 연산자 배열)
-         * 
-         */
-        //private static string[] SplitFormula(string formula)
-        private static (string[], string[]) SplitFormula(string formula)
+        private static int[] SplitFormula(string formula)
         {
             List<string> tokens = ParseExpression(formula);
             string[] elements = new string[tokens.Count / 2 + 1]; // 숫자 개수 만큼 반토막+1            
-            string[] operations = new string[tokens.Count / 2]; // 숫자 개수 만큼 반토막+1            
-
+            
             int index = 0;
             
             for (int i = 0; i < tokens.Count; i++)
             {
                 if (i % 2 == 1)
                 {
-                    operations[index] = tokens[i].ToString();
                     elements[index] = tokens[i].ToString(); // 연산자 넣기
 
                 }
@@ -89,11 +67,15 @@
                     index++;
                 }
             }
-            return (elements, operations);
-            //return elements;
+            // type check 불안하면 if (int.TryParse(s, out n)) 넣고.
+            return Array.ConvertAll(elements, int.Parse);
         }
 
-        // SplitFormula 말고 이것만 하는 게 더 의도에 맞는 듯?
+        /// <summary>
+        /// 숫자는 합쳐서 넣고, 연산자와 따로 둔다
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns>List[...숫자,...연산자]</returns>
         private static List<string> ParseExpression(string expression)
         {
             // Create a list to store the tokens
@@ -128,6 +110,14 @@
             return tokens;
         }
 
+        /// <summary>
+        ///  안 쓴다.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="op"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private static int Evaluate(int a, int b, string op)
         {
             if (op == "+")
@@ -332,3 +322,33 @@
 //}
 
 
+/// DP 코드 이해 못 함. DP 의 이점이 적다.
+//// Define a 2D table for dynamic programming
+//int[,] dp = new int[n, n];
+
+//// Initialize the table
+//for (int i = 0; i < n; i++)
+//{
+//    dp[i, i] = int.Parse(elements[i]);  // elements[i] is the ith element in the formula
+//}
+
+//// Use dynamic programming to fill out the rest of the table
+//for (int length = 2; length <= n; length++)
+//{
+//    for (int i = 0; i <= n - length; i++)
+//    {
+//        int j = i + length - 1;
+//        dp[i, j] = int.MaxValue;
+//        for (int k = i; k < j; k++)
+//        {
+//            // operations 연산자만 있는 배열이라 '숫자 배열'보다 요소가 하나 적다.
+//            // 연산자 따로 떼서 계산할거면 elements 에서 각 숫자에 연산자를 붙이지 말아야지
+//            //int value = Evaluate(dp[i, k], dp[k + 1, j], operations[k]);  // i ~ k ~ j 토막
+//            int value = Evaluate(dp[i, k], dp[k + 1, j], elements[k]);  // i ~ k ~ j 토막
+//            dp[i, j] = Math.Min(dp[i, j], value);
+//        }
+//    }
+//}
+
+//// The minimum value of the entire formula is dp[0][n-1]
+//return dp[0, n - 1];
